@@ -32,4 +32,29 @@
     - name: reload apache
       ansible.builtin.shell:
         cmd: 'reload-gub-apache.sh'
+- hosts: apache
+  become: true
+  tasks:
+  - name: Copy certificates
+    ansible.builtin.copy:
+      src: '{{ item }}'
+      dest: '/etc/ssl/certs/'
+      mode: '600'
+      owner: 'root'
+    notify: reload apache
+    loop:
+      - './ssl/certs/ub-gu-se.pem'
+      - './ssl/certs/interm_geant.pem'
+  - name: Copy private key
+    ansible.builtin.copy:
+      src: './ssl/private/ub-gu-se.key'
+      dest: '/etc/ssl/private/'
+      mode: '600'
+      owner: root
+    notify: reload apache
+  handlers:
+    - name: reload apache
+      ansible.builtin.service:
+        name: apache2
+        state: reloaded
 ...
