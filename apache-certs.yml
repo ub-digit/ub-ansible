@@ -1,6 +1,7 @@
 ---
 - hosts: docker
   become: true
+
   tasks:
   - name: Copy apache scripts
     ansible.builtin.copy:
@@ -11,6 +12,7 @@
       - './remote_scripts/restart-gub-apache.sh'
       - './remote_scripts/reload-gub-apache.sh'
       - './remote_scripts/test-gub-apache.sh'
+
   - name: Copy certificates
     ansible.builtin.copy:
       src: '{{ item }}'
@@ -21,6 +23,7 @@
     loop:
       - './ssl/certs/ub-gu-se.pem'
       - './ssl/certs/interm_geant.pem'
+
   - name: Copy private key
     ansible.builtin.copy:
       src: './ssl/private/ub-gu-se.key'
@@ -28,12 +31,15 @@
       mode: '600'
       owner: root
     notify: reload apache
+
   handlers:
     - name: reload apache
       ansible.builtin.shell:
         cmd: 'reload-gub-apache.sh'
+
 - hosts: apache
   become: true
+
   tasks:
   - name: Copy certificates
     ansible.builtin.copy:
@@ -45,6 +51,7 @@
     loop:
       - './ssl/certs/ub-gu-se.pem'
       - './ssl/certs/interm_geant.pem'
+
   - name: Copy private key
     ansible.builtin.copy:
       src: './ssl/private/ub-gu-se.key'
@@ -52,6 +59,7 @@
       mode: '600'
       owner: root
     notify: reload apache
+
   handlers:
     - name: reload apache
       ansible.builtin.service:
