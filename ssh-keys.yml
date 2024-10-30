@@ -1,0 +1,52 @@
+---
+- name: Deploy ssh keys
+  hosts: all
+
+  tasks:
+  - name: Collect authorized keys
+    ansible.builtin.find:
+      recurse: true
+      file_type: "file"
+      paths:
+        - '{{ playbook_dir}}/authorized_keys/'
+      patterns:
+        - '*.pub'
+    delegate_to: 127.0.0.1
+    register: authorized_key_files
+
+  - name: Set authorized keys
+    ansible.builtin.set_fact:
+      authorized_keys: "{{ authorized_keys | default([]) + [lookup('ansible.builtin.file', item.path)] }}"
+    loop: '{{ authorized_key_files.files }}'
+
+  - name: Set host specific authorized keys directory
+    ansible.builtin.set_fact:
+      host_authorized_keys_dir: '{{ playbook_dir }}/host_authorized_keys/{{ inventory_hostname }}'
+
+  - name: Check if host specific authorized keys exist
+    ansible.builtin.stat:
+      path: '{{ host_authorized_keys_dir }}'
+    register: host_authorized_keys_dir_s
+    delegate_to: 127.0.0.1
+
+  - name: Append host specific authorized keys
+    ansible.builtin.set_fact:
+      authorized_keys: "{{ authorized_keys + [lookup('ansible.builtin.file', item)] }}"
+    with_fileglob: '{{ host_authorized_keys_dir }}/*.pub'
+    when: host_authorized_keys_dir_s.stat.isdir is defined and host_authorized_keys_dir_s.stat.isdir
+    delegate_to: 127.0.0.1
+
+  - name: Set authorized keys of the ansible user
+    ansible.posix.authorized_key:
+      user: "{{ ansible_user }}"
+      exclusive: true
+      state: present
+      key: "{{ authorized_keys | join('\n') }}"
+
+  - name: Write private keys
+    ansible.builtin.copy:
+      content: '{{ item.content }}'
+      dest: '/home/{{ ansible_user }}/.ssh/{{ item.file }}'
+      mode: '600'
+    loop: "{{ private_keys | dict2items(key_name='file', value_name='content') }}"
+    when: private_keys is defined
