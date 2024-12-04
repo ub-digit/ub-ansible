@@ -1,2 +1,4 @@
 ssl/certs/*.pem
 ssl/private/*.key
+
+*.DS_Store
