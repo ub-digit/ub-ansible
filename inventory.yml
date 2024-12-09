@@ -18,6 +18,7 @@ docker:
     dockerhem_lab:
     dockerhem_staging:
     dockerhem_prod:
+    logg:
   vars:
     ansible_user: apps
 gub_apache:
