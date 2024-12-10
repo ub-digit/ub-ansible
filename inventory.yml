@@ -11,6 +11,8 @@ ssh:
     koha_staging:
     koha_prod:
     logg:
+    ezproxy_staging:
+    ezproxy_prod:
   vars:
     ansible_user: installer
     authorized_keys_user: apps
@@ -34,5 +36,11 @@ apache:
     koha_lab:
     koha_staging:
     koha_prod:
+  vars:
+    ansible_user: apps
+ezproxy:
+  hosts:
+    ezproxy_staging:
+    ezproxy_prod:
   vars:
     ansible_user: apps
