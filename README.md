@@ -1,9 +1,14 @@
 # ub-ansible
-
-## real run
-
+Playbooks can be run directly using ansible-playbook (to dry-run add the -C or --check option):
 `ansible-playbook -i inventory.yml apache-certs.yml`
 
-## dry run
+or through the wrapper script ./run-playbook.sh as:
 
-`ansible-playbook -i inventory.yml apache-certs.yml --check`
+`./run-playbook <target> <playbook> <extra playbook arguments>`
+
+Extra ansible-playbook arguments can be provided after the playbook name,
+for example:
+
+`./run-playbook staging ezproxy-certs -C`
+
+to dry-run the ezproxy-cert playbook on staging.

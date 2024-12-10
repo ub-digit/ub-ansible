@@ -10,6 +10,8 @@ all:
     koha_staging:
     koha_prod:
     logg:
+    ezproxy_staging:
+    ezproxy_prod:
 docker:
   hosts:
     nomad_client_1:
@@ -29,5 +31,11 @@ apache:
     koha_lab:
     koha_staging:
     koha_prod:
+  vars:
+    ansible_user: apps
+ezproxy:
+  hosts:
+    ezproxy_staging:
+    ezproxy_prod:
   vars:
     ansible_user: apps

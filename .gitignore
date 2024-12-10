@@ -1,4 +1,5 @@
 ssl/certs/*.pem
 ssl/private/*.key
-
 *.DS_Store
+ezproxy_ssl/*
+!ezproxy_ssl/.gitkeep
