@@ -1,0 +1,54 @@
+---
+- hosts: ezproxy
+  any_errors_fatal: true # Will abort if any task fails
+  become: true
+
+  tasks:
+  - name: Set ezproxy paths
+    ansible.builtin.set_fact:
+      ezproxy_ssl_path: '/data/ezproxy/ssl'
+
+  - name: Get current certificates
+    #become: true
+    ansible.builtin.find:
+      paths: "{{ ezproxy_ssl_path }}"
+      patterns: '*.crt'
+      file_type: file
+    register: certificate_files
+
+  - name: Set next certificate number
+    ansible.builtin.set_fact:
+      next_certificate_number: "{{ certificate_files.files | map(attribute='path') | sort | last | regex_replace('.*\\/0*', '') | regex_replace('\\.crt', '') | int + 1}}"
+
+  - name: Set next certificate file name
+    ansible.builtin.set_fact:
+      next_certificate_file_name: "{{ '%08d' % next_certificate_number | int }}"
+
+  - name: Copy certificate ca and crt files
+    ansible.builtin.copy:
+      src: './ezproxy_ssl/{{ next_certificate_file_name }}.{{ item }}'
+      dest: "{{ ezproxy_ssl_path }}"
+      mode: '600'
+      owner: 'root'
+    loop:
+      - 'crt'
+      - 'ca'
+
+  - name: Copy certificate key file
+    ansible.builtin.copy:
+      src: './ezproxy_ssl/{{ next_certificate_file_name }}.key'
+      dest: "{{ ezproxy_ssl_path }}"
+      mode: '644'
+      owner: 'root'
+
+  - name: Write active certificate
+    ansible.builtin.copy:
+      dest: "{{ [ ezproxy_ssl_path, 'active' ] | path_join }}"
+      group: root
+      owner: root
+      mode: '644'
+      content: "{{ next_certificate_number }}"
+
+  - name: Restart ezproxy
+    ansible.builtin.shell:
+      cmd: 'restart-ezproxy.sh'
