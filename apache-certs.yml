@@ -17,7 +17,7 @@
     ansible.builtin.copy:
       src: '{{ item }}'
       dest: '/opt/gub-apache2/ssl/certs/'
-      mode: '600'
+      mode: '755'
       owner: 'root'
     notify: reload apache
     loop:
@@ -62,7 +62,7 @@
 
   handlers:
     - name: reload apache
-      ansible.builtin.service:
+      ansible.builtin.systemd_service:
         name: apache2
         state: reloaded
 ...
