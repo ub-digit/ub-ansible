@@ -1,0 +1,15 @@
+- type: filestream
+  id: ezproxy
+  enabled: true
+  paths:
+    - /data/ezproxy/logs/*.log
+  close_inactive: {{ filebeat_close_inactive }}
+  ignore_older: {{ filebeat_ignore_older }}
+  scan_frequency: {{ filebeat_scan_frequency }}
+  prospector.scanner.check_interval: {{ filebeat_check_interval }}
+  processors:
+    - add_fields:
+        fields:
+          service: ezproxy
+          logging_format: ezproxy
+        target: ""

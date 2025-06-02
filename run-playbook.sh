@@ -24,7 +24,7 @@ if [[ "$target" == "production" ]]; then
     target="prod"
 fi
 
-vault_playbooks=""
+vault_playbooks="graylog"
 vault_arguments=""
 
 if [[ " $playbook " =~ " $vault_playbooks " ]]; then

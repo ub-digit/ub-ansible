@@ -48,3 +48,19 @@ ezproxy:
     ezproxy_prod:
   vars:
     ansible_user: apps
+filebeat:
+  children:
+    ezproxy:
+    docker:
+    #TODO: Add gup_apache? Same as docker right now but could change even though unlikely. Ansible will ignore duplicate hosts
+  vars:
+    ansible_user: apps
+    filebeat_close_inactive: 5m
+    filebeat_ignore_older: 24h
+    filebeat_scan_frequency: 10s
+    filebeat_check_interval: 10s
+graylog:
+  hosts:
+    logg_prod:
+  vars:
+    ansible_user: apps

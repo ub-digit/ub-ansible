@@ -3,3 +3,6 @@ ssl/private/*.key
 *.DS_Store
 ezproxy_ssl/*
 !ezproxy_ssl/.gitkeep
+graylog_ssl/private/*
+!graylog_ssl/private/.gitkeep
+.vault_password

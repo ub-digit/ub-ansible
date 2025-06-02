@@ -1,0 +1,26 @@
+/opt/gub-apache2/logs/*.log {
+    daily
+    missingok
+    rotate 180
+    compress
+    delaycompress
+    notifempty
+    create 640 root adm
+    sharedscripts
+    postrotate
+        # Restart apache to open new logs
+        /usr/local/bin/reload-gub-apache.sh
+        # Restart JSON conversion service to tail new logs
+        systemctl restart apache-kvlog-tail.service
+    endscript
+}
+
+/opt/gub-apache2/logs/*.log.json {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}

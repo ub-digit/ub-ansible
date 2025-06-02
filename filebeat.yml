@@ -1,0 +1,73 @@
+---
+- hosts: filebeat
+  become: true
+
+  tasks:
+  - name: Ensure required dependencies are present
+    ansible.builtin.apt:
+      name:
+        - apt-transport-https
+        - gnupg2
+      state: present
+
+  - name: Ensure Elasticsearch apt key
+    ansible.builtin.apt_key:
+      url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+      id: 46095ACC8548582C1A2699A9D27D666CD88E42B4
+      state: present
+
+  - name: Ensure Filebeat repository
+    ansible.builtin.apt_repository:
+      repo: 'deb https://artifacts.elastic.co/packages/8.x/apt stable main'
+      state: present
+      update_cache: true
+
+  - name: Ensure Filebeat is installed
+    ansible.builtin.apt:
+      name: filebeat
+      state: present
+
+  - name: Ensure Filebeat configuration
+    ansible.builtin.template:
+      src: templates/filebeat/filebeat.yml.j2
+      dest: /etc/filebeat/filebeat.yml
+      owner: root
+      group: root
+      mode: '0600'
+    notify: reload filebeat
+
+  - name: Ensure Filebeat inputs.d directoy
+    ansible.builtin.file:
+      path: /etc/filebeat/inputs.d
+      state: directory
+      owner: root
+      group: root
+      mode: '0755'
+
+  - name: Copy certificates
+    ansible.builtin.copy:
+      src: ./graylog_ssl/certs/graylog.crt
+      dest: /etc/ssl/graylog/
+      mode: '755'
+      owner: root
+    notify: reload filebeat
+
+  - name: Copy private key
+    ansible.builtin.copy:
+      src: ./graylog_ssl/private/graylog.key
+      dest: /etc/ssl/graylog/
+      mode: '600'
+      owner: root
+    notify: reload filebeat
+
+  - name: Ensure Filebeat is started and enabled at boot.
+    ansible.builtin.systemd_service:
+      name: filebeat
+      enabled: yes
+      state: started
+
+  handlers:
+    - name: reload filebeat
+      ansible.builtin.systemd_service:
+        name: filebeat
+        state: restarted

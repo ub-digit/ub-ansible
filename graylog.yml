@@ -1,0 +1,78 @@
+---
+- hosts: graylog
+  become: true
+  vars:
+    docker_directory: /apps/graylog
+    data_directory: /data/graylog
+
+  tasks:
+  - name: Create data directory
+    ansible.builtin.file:
+      path: "{{ data_dirctory }}"
+      owner: apps
+      group: apps
+      state: directory
+
+  - name: Create graylog data directories
+    ansible.builtin.file:
+      path: "{{ [data_directory, item] | path_join }}"
+      owner: 1100
+      group: 1100
+      state: directory
+    loop:
+      - data
+      - certs
+      - plugin # Used??
+      - server
+
+  - name: Create mongodb/opensearch data directories
+    ansible.builtin.file:
+      path: "{{ [data_directory, item] | path_join }}"
+      owner: 999
+      group: 999
+      state: directory
+    loop:
+      - datanode-data
+      - mongodb
+
+  - name: Copy certificate
+    ansible.builtin.copy:
+      src: ./graylog_ssl/certs/graylog.crt
+      dest: "[data_directory, 'certs'] | path_join"
+      mode: '755'
+      owner: root
+
+  - name: Copy private key
+    ansible.builtin.copy:
+      src: ./graylog_ssl/private/graylog.key
+      dest: "[data_directory, 'certs'] | path_join"
+      mode: '600'
+      owner: root
+
+  - name: Create app directory
+    ansible.builtin.file:
+      path: /apps/graylog
+      owner: apps
+      group: apps
+      state: directory
+
+  - name: Copy docker compose files
+    ansible.builtin.copy:
+      src: "./graylog_docker/{{ item }}"
+      dest: "/apps/graylog/{{ item }}"
+      owner: apps
+      group: apps
+    loop:
+      - docker-compose.yml
+      - .env
+      - secrets.env
+
+  - name: Ensure graylog is down
+    ansible.builtin.shell:
+      chdir: /apps/graylog
+      cmd: docker compose down
+
+  - name: Ensure graylog is up
+    ansible.builtin.shell:
+      chdir: /apps/graylog
+      cmd: docker compose up -d

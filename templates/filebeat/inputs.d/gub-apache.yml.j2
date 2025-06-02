@@ -1,0 +1,31 @@
+filebeat.inputs:
+  - type: filestream
+    id: gub-apache
+    enabled: true
+    paths:
+      - /opt/gub-apache2/logs/*.log.json
+    close_inactive: {{ filebeat_close_inactive }} #5m
+    ignore_older: {{ filebeat_ignore_older }} #24h
+    scan_frequency: {{ filebeat_scan_frequency }} #10s
+    prospector.scanner.check_interval: {{ filebeat_check_interval }} #10s
+
+    processors:
+      - add_fields:
+          fields:
+            service: gub-apache
+          target: ""
+      - add_fields:
+          when:
+            contains:
+              log.file.path: "access.log.json"
+          fields:
+            logging_format: gub_apache_access
+          target: ""
+      - add_fields:
+          when:
+            contains:
+              log.file.path: "error.log.json"
+          fields:
+            log_type: gub_apache_error
+          target: ""
+

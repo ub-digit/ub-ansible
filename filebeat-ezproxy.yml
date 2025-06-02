@@ -1,0 +1,9 @@
+---
+- hosts: ezproxy
+  become: true
+
+  tasks:
+  - name: Ensure Ezproxy filebeat configuration
+    ansible.builtin.template:
+      src: templates/filebeat/inputs.d/ezproxy.yml.j2
+      dest: /etc/filebeat/inputs.d/ezproxy.yml

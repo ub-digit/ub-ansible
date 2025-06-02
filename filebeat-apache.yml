@@ -1,0 +1,66 @@
+---
+- hosts: gub_apache
+  become: true
+
+  tasks:
+  - name: Write custom apache log format config
+    ansible.builtin.copy:
+      src: files/gub-apache/conf/customlog.conf
+      dest: /opt/gub-apache2/conf/customlog.conf
+      owner: root
+      group: root
+    notify: reload apache
+
+  - name: Write apache logrotate configuration
+    ansible.builtin.copy:
+      src: files/gub-apache/logrotate.d/gub-apache
+      dest: /etc/logrotate.d/gub-apache
+      owner: root
+      group: root
+
+  - name: Write apache filebeat configuration
+    ansible.builtin.template:
+      src: templates/filebeat/inputs.d/gub-apache.yml.j2
+      dest: /etc/filebeat/inputs.d/gub-apache.yml
+      owner: root
+      group: root
+    notify: reload filebeat
+
+  - name: Copy apache logs to json scripts
+    ansible.builtin.copy:
+      src: "remote_scripts/{{ item }}"
+      dest: /usr/local/bin/
+      owner: root
+      group: root
+      mode: '0755'
+    loop:
+      - apache_logs_kv_safe_to_json.py
+      - kv_safe_tail.sh
+
+  - name: Deploy apache-kv-safe-tail systemd service
+    ansible.builtin.copy:
+      src: files/gub-apache/systemd/apache-kv-safe-tail.service
+      dest: /etc/systemd/system/apache-kv-safe-tail.service
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Reload systemd to register new service
+    ansible.builtin.command: systemctl daemon-reexec
+    changed_when: false
+
+  - name: Enable and start apache-kv-safe-tail service
+    ansible.builtin.systemd:
+      name: apache-kv-safe-tail.service
+      enabled: yes
+      state: started
+
+  handlers:
+    - name: reload apache
+      ansible.builtin.shell:
+        cmd: 'reload-gub-apache.sh'
+
+    - name: reload filebeat
+      ansible.builtin.systemd_service:
+        name: filebeat
+        state: reloaded

@@ -1,0 +1,96 @@
+# For DataNode setup, graylog starts with a preflight UI, this is a change from just using OpenSearch/Elasticsearch.
+# Please take a look at the README at the top of this repo or the regular docs for more info.
+
+services:
+  # MongoDB: https://hub.docker.com/_/mongo/
+  mongodb:
+    image: "mongo:6.0"
+    restart: "on-failure"
+    networks:
+      - graylog
+    volumes:
+      - "${MONGODB_DATA_HOST_DIR}:/data/db"
+      - "${MONGODB_CONFIG_HOST_PATH}:/data/configdb"
+
+  # For DataNode setup, graylog starts with a preflight UI, this is a change from just using OpenSearch/Elasticsearch.
+  # Please take a look at the README at the top of this repo or the regular docs for more info.
+  # Graylog Data Node: https://hub.docker.com/r/graylog/graylog-datanode
+  datanode:
+    image: "${DATANODE_IMAGE:-graylog/graylog-datanode:6.1}"
+    hostname: "datanode"
+    env_file: "secrets.env"
+    environment:
+      GRAYLOG_DATANODE_NODE_ID_FILE: "/var/lib/graylog-datanode/node-id"
+      GRAYLOG_DATANODE_MONGODB_URI: "mongodb://mongodb:27017/graylog"
+      #GRAYLOG_DATANODE_PASSWORD_SECRET: ${GRAYLOG_DATANODE_PASSWORD_SECRET} # WTF
+    ulimits:
+      memlock:
+        hard: -1
+        soft: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - "127.0.0.1:8999:8999/tcp"   # DataNode API
+      - "127.0.0.1:9200:9200/tcp"
+      - "127.0.0.1:9300:9300/tcp"
+    networks:
+      - graylog
+    volumes:
+      - "${DATANODE_DATA_HOST_DIR}:/var/lib/graylog-datanode"
+    restart: "on-failure"
+
+  # Graylog: https://hub.docker.com/r/graylog/graylog-enterprise
+  graylog:
+    hostname: "server"
+    image: "${GRAYLOG_IMAGE:-graylog/graylog:6.1}"
+    depends_on:
+      mongodb:
+        condition: "service_started"
+      datanode:
+        condition: "service_started"
+    entrypoint: "/usr/bin/tini --  /docker-entrypoint.sh"
+    env_file: "secrets.env"
+    environment:
+      GRAYLOG_NODE_ID_FILE: "/usr/share/graylog/data/data/node-id"
+      GRAYLOG_HTTP_BIND_ADDRESS: "0.0.0.0:9000"
+      GRAYLOG_HTTP_EXTERNAL_URI: $WEB_INTERFACE_URL/
+      GRAYLOG_MONGODB_URI: "mongodb://mongodb:27017/graylog"
+      GRAYLOG_TRANSPORT_EMAIL_ENABLED: true
+      GRAYLOG_TRANSPORT_EMAIL_PROTOCOL: $EMAIL_PROTOCOL
+      GRAYLOG_TRANSPORT_EMAIL_HOSTNAME: $EMAIL_HOSTNAME
+      GRAYLOG_TRANSPORT_EMAIL_PORT: $EMAIL_PORT
+      GRAYLOG_TRANSPORT_EMAIL_USE_AUTH: $EMAIL_USE_AUTH
+      GRAYLOG_TRANSPORT_EMAIL_AUTH_USERNAME: $EMAIL_AUTH_USERNAME
+      GRAYLOG_TRANSPORT_EMAIL_FROM_EMAIL: $EMAIL_FROM_EMAIL
+      GRAYLOG_TRANSPORT_EMAIL_FROM_NAME: $EMAIL_FROM_NAME
+      GRAYLOG_TRANSPORT_EMAIL_SUBJECT_PREFIX: $EMAIL_SUBJECT_PREFIX
+      GRAYLOG_TRANSPORT_EMAIL_WEB_INTERFACE_URL: $WEB_INTERFACE_URL
+      GRAYLOG_TRANSPORT_EMAIL_USE_TLS: $EMAIL_USE_TLS
+      GRAYLOG_TRANSPORT_EMAIL_USE_SSL: $EMAIL_USE_SSL
+    ports:
+    - "5044:5044/tcp"   # Beats
+    - "127.0.0.1:5140:5140/udp"   # Syslog
+    - "127.0.0.1:5140:5140/tcp"   # Syslog
+    - "127.0.0.1:5555:5555/tcp"   # RAW TCP
+    - "127.0.0.1:5555:5555/udp"   # RAW UDP
+    - "127.0.0.1:9000:9000/tcp"   # Server API
+    - "127.0.0.1:12201:12201/tcp" # GELF TCP
+    - "127.0.0.1:12201:12201/udp" # GELF UDP
+    #- "10000:10000/tcp" # Custom TCP port
+    #- "10000:10000/udp" # Custom UDP port
+    - "13301:13301/tcp" # Forwarder data
+    - "13302:13302/tcp" # Forwarder config
+    networks:
+      - graylog
+    volumes:
+      - "${GRAYLOG_DATA_HOST_DIR}:/usr/share/graylog/data/data"
+      - "${GRAYLOG_CERTS_HOST_DIR}:/etc/graylog/certs:ro"
+      - "${GRAYLOG_PLUGIN_HOST_DIR}:/etc/graylog/plugin:ro"
+      - "${GRAYLOG_SERVER_HOST_DIR}:/etc/graylog/server:ro"
+      - "${GRAYLOG_CONF_HOST_PATH}:/usr/share/graylog/data/config/graylog.conf:ro"
+    restart: "on-failure"
+
+networks:
+  graylog:
+    driver: "bridge"

@@ -1,0 +1,15 @@
+[Unit]
+Description=Real-time Apache safe_kv.log JSON parser
+After=network.target apache2.service
+
+[Service]
+ExecStart=/usr/local/bin/kv_safe_tail.sh /opt/gub-apache2/logs/access.log /opt/gub-apache2/logs/error.log
+
+Restart=always
+User=root
+Group=root
+StandardOutput=null
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
