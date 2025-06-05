@@ -26,11 +26,13 @@ filebeat.autodiscover:
         - condition:
             or:
               - equals:
-                  docker.container.labels.gu.ub.logging_encoding: "JSON"
+                  docker.container.labels.gu.ub.logging_format: "ESC"
               - equals:
                   docker.container.labels.org.label-schema.name: "Elasticsearch"
               - equals:
                   docker.container.labels.org.label-schema.name: "Kibana"
+              - equals:
+                  docker.container.labels.com.docker.compose.service: "graylog"
           config:
             - type: filestream
               id: container-${data.docker.container.id}
@@ -42,9 +44,21 @@ filebeat.autodiscover:
               prospector.scanner.check_interval: {{ filebeat_check_interval }} #10s
               processors:
                 - add_fields:
+                    when:
+                      not:
+                        equals:
+                          docker.container.labels.com.docker.compose.service: "graylog"
                     fields:
                       logging_format: ECS
                     target: ""
+                - add_fields:
+                    when:
+                      equals:
+                        docker.container.labels.com.docker.compose.service: "graylog"
+                    fields:
+                      logging_format: graylog
+                    target: ""
+
 
 # Each - is an input. Most options can be set at the input level, so
 # you can use different inputs for various configurations.
