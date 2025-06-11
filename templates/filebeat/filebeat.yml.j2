@@ -22,6 +22,7 @@ filebeat.config.inputs:
 filebeat.autodiscover:
   providers:
     - type: docker
+      labels.dedot: false
       templates:
         - condition:
             or:
@@ -31,34 +32,48 @@ filebeat.autodiscover:
                   docker.container.labels.org.label-schema.name: "Elasticsearch"
               - equals:
                   docker.container.labels.org.label-schema.name: "Kibana"
-              - equals:
-                  docker.container.labels.com.docker.compose.service: "graylog"
           config:
             - type: filestream
               id: container-${data.docker.container.id}
               paths:
                 - "/var/lib/docker/containers/${data.docker.container.id}/*.log"
-              close_inactive: {{ filebeat_close_inactive }} #5m
-              ignore_older: {{ filebeat_ignore_older }} #24h
-              scan_frequency: {{ filebeat_scan_frequency }} #10s
-              prospector.scanner.check_interval: {{ filebeat_check_interval }} #10s
+              close_inactive: 5m #5m
+              ignore_older: 24h #24h
+              scan_frequency: 10s #10s
+              prospector.scanner.check_interval: 10s #10s
               processors:
                 - add_fields:
-                    when:
-                      not:
-                        equals:
-                          docker.container.labels.com.docker.compose.service: "graylog"
                     fields:
                       logging_format: ECS
                     target: ""
+        - condition:
+            equals:
+              docker.container.labels.com.docker.compose.service: "graylog"
+          config:
+            - type: filestream
+              id: container-${data.docker.container.id}
+              paths:
+                - "/var/lib/docker/containers/${data.docker.container.id}/*.log"
+              close_inactive: 5m #5m
+              ignore_older: 24h #24h
+              scan_frequency: 10s #10s
+              prospector.scanner.check_interval: 10s #10s
+              parsers:
+                - ndjson:
+                    target: ""
+                    message_key: log
+                - multiline:
+                    type: pattern
+                    pattern: '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}'
+                    negate: true
+                    match: after
+                    max_lines: 1000
+                    timeout: 5s
+              processors:
                 - add_fields:
-                    when:
-                      equals:
-                        docker.container.labels.com.docker.compose.service: "graylog"
                     fields:
                       logging_format: graylog
                     target: ""
-
 
 # Each - is an input. Most options can be set at the input level, so
 # you can use different inputs for various configurations.

@@ -24,7 +24,7 @@
       dest: /etc/filebeat/inputs.d/gub-apache.yml
       owner: root
       group: root
-    notify: reload filebeat
+    #notify: reload filebeat
 
   - name: Copy apache logs to json scripts
     ansible.builtin.copy:
@@ -63,4 +63,4 @@
     - name: reload filebeat
       ansible.builtin.systemd_service:
         name: filebeat
-        state: reloaded
+        state: restarted
