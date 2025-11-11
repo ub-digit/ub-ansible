@@ -27,11 +27,11 @@ filebeat.autodiscover:
         - condition:
             or:
               - equals:
-                  docker.container.labels.gu.ub.logging_format: "ESC"
+                  docker.container.labels.gu.ub.logging_format: "ECS"
               - equals:
                   docker.container.labels.org.label-schema.name: "Elasticsearch"
-              - equals:
-                  docker.container.labels.org.label-schema.name: "Kibana"
+#              - equals:
+#                  docker.container.labels.org.label-schema.name: "Kibana"
           config:
             - type: filestream
               id: container-${data.docker.container.id}
