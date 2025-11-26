@@ -13,6 +13,30 @@
       - './remote_scripts/reload-gub-apache.sh'
       - './remote_scripts/test-gub-apache.sh'
 
+  - name: Prepare certificate for deploy
+    ansible.builtin.copy:
+      src: './ssl/letsencrypt/etc/live/ub.gu.se/cert.pem'
+      dest: './ssl/certs/ub-gu-se.pem'
+      mode: '755'
+    delegate_to: localhost
+    run_once: true
+
+  - name: Prepare chain certificate for deploy
+    ansible.builtin.copy:
+      src: './ssl/letsencrypt/etc/live/ub.gu.se/chain.pem'
+      dest: './ssl/certs/ub-gu-se-chain.pem'
+      mode: '755'
+    delegate_to: localhost
+    run_once: true
+
+  - name: Prepare private key for deploy
+    ansible.builtin.copy:
+      src: './ssl/letsencrypt/etc/live/ub.gu.se/privkey.pem'
+      dest: './ssl/private/ub-gu-se.key'
+      mode: '600'
+    delegate_to: localhost
+    run_once: true
+
   - name: Copy certificates
     ansible.builtin.copy:
       src: '{{ item }}'
@@ -22,7 +46,7 @@
     notify: reload apache
     loop:
       - './ssl/certs/ub-gu-se.pem'
-      - './ssl/certs/interm_geant.pem'
+      - './ssl/certs/ub-gu-se-chain.pem'
 
   - name: Copy private key
     ansible.builtin.copy:
@@ -41,6 +65,30 @@
   become: true
 
   tasks:
+  - name: Prepare certificate for deploy
+    ansible.builtin.copy:
+      src: './ssl/letsencrypt/etc/live/ub.gu.se/cert.pem'
+      dest: './ssl/certs/ub-gu-se.pem'
+      mode: '755'
+    delegate_to: localhost
+    run_once: true
+
+  - name: Prepare chain certificate for deploy
+    ansible.builtin.copy:
+      src: './ssl/letsencrypt/etc/live/ub.gu.se/chain.pem'
+      dest: './ssl/certs/ub-gu-se-chain.pem'
+      mode: '755'
+    delegate_to: localhost
+    run_once: true
+
+  - name: Prepare private key for deploy
+    ansible.builtin.copy:
+      src: './ssl/letsencrypt/etc/live/ub.gu.se/privkey.pem'
+      dest: './ssl/private/ub-gu-se.key'
+      mode: '600'
+    delegate_to: localhost
+    run_once: true
+
   - name: Copy certificates
     ansible.builtin.copy:
       src: '{{ item }}'
