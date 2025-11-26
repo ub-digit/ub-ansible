@@ -98,7 +98,7 @@
     notify: reload apache
     loop:
       - './ssl/certs/ub-gu-se.pem'
-      - './ssl/certs/interm_geant.pem'
+      - './ssl/certs/ub-gu-se-chain.pem'
 
   - name: Copy private key
     ansible.builtin.copy:
