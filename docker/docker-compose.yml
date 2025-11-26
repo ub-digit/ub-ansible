@@ -1,0 +1,6 @@
+services:
+  ssl-deploy:
+    image: docker.ub.gu.se/ssl-deploy:${SSL_DEPLOY_VERSION}
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.ssl-deploy
