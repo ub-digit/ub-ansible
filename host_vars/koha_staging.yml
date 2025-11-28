@@ -1,1 +1,2 @@
 ansible_host: koha-staging.ub.gu.se
+ansible_user: apps

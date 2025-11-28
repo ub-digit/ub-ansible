@@ -1,1 +1,2 @@
 ansible_host: koha-lab.ub.gu.se
+ansible_user: apps

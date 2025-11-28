@@ -12,4 +12,4 @@ WORKDIR /ansible
 COPY . /ansible
 
 # Default command
-CMD ["ansible-playbook", "--version"]
+CMD ["ansible-playbook", "-i", "inventory.yml", "apache-certs.yml"]
