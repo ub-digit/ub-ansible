@@ -1,4 +1,29 @@
 ---
+- hosts: 127.0.0.1
+  gather_facts: false
+
+  tasks:
+  - name: Ensure local destination directories exist
+    ansible.builtin.file:
+      path: "{{ item }}"
+      state: directory
+      mode: '0755'
+    loop:
+      - './ssl/certs'
+      - './ssl/private'
+
+  - name: Prepare certificates and key for deploy
+    ansible.builtin.copy:
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      mode: "{{ item.mode }}"
+    loop:
+      - { src: './ssl/letsencrypt/etc/live/ub.gu.se/cert.pem', dest: './ssl/certs/ub-gu-se.pem', mode: '0644' }
+      - { src: './ssl/letsencrypt/etc/live/ub.gu.se/chain.pem', dest: './ssl/certs/ub-gu-se-chain.pem', mode: '0644' }
+      - { src: './ssl/letsencrypt/etc/live/ub.gu.se/privkey.pem', dest: './ssl/private/ub-gu-se.key', mode: '0600' }
+    loop_control:
+      label: "{{ item.dest }}"
+
 - hosts: docker
   become: true
 
@@ -12,30 +37,6 @@
       - './remote_scripts/restart-gub-apache.sh'
       - './remote_scripts/reload-gub-apache.sh'
       - './remote_scripts/test-gub-apache.sh'
-
-  - name: Prepare certificate for deploy
-    ansible.builtin.copy:
-      src: './ssl/letsencrypt/etc/live/ub.gu.se/cert.pem'
-      dest: './ssl/certs/ub-gu-se.pem'
-      mode: '755'
-    delegate_to: localhost
-    run_once: true
-
-  - name: Prepare chain certificate for deploy
-    ansible.builtin.copy:
-      src: './ssl/letsencrypt/etc/live/ub.gu.se/chain.pem'
-      dest: './ssl/certs/ub-gu-se-chain.pem'
-      mode: '755'
-    delegate_to: localhost
-    run_once: true
-
-  - name: Prepare private key for deploy
-    ansible.builtin.copy:
-      src: './ssl/letsencrypt/etc/live/ub.gu.se/privkey.pem'
-      dest: './ssl/private/ub-gu-se.key'
-      mode: '600'
-    delegate_to: localhost
-    run_once: true
 
   - name: Copy certificates
     ansible.builtin.copy:
@@ -65,30 +66,6 @@
   become: true
 
   tasks:
-  - name: Prepare certificate for deploy
-    ansible.builtin.copy:
-      src: './ssl/letsencrypt/etc/live/ub.gu.se/cert.pem'
-      dest: './ssl/certs/ub-gu-se.pem'
-      mode: '755'
-    delegate_to: localhost
-    run_once: true
-
-  - name: Prepare chain certificate for deploy
-    ansible.builtin.copy:
-      src: './ssl/letsencrypt/etc/live/ub.gu.se/chain.pem'
-      dest: './ssl/certs/ub-gu-se-chain.pem'
-      mode: '755'
-    delegate_to: localhost
-    run_once: true
-
-  - name: Prepare private key for deploy
-    ansible.builtin.copy:
-      src: './ssl/letsencrypt/etc/live/ub.gu.se/privkey.pem'
-      dest: './ssl/private/ub-gu-se.key'
-      mode: '600'
-    delegate_to: localhost
-    run_once: true
-
   - name: Copy certificates
     ansible.builtin.copy:
       src: '{{ item }}'
