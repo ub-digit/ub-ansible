@@ -64,3 +64,8 @@ graylog:
     logg_prod:
   vars:
     ansible_user: apps
+letsencrypt_http:
+  hosts:
+    logg_prod:
+  vars:
+    ansible_user: apps
