@@ -1,0 +1,15 @@
+FROM debian:bookworm
+
+# Install ansible 
+RUN apt-get update && \
+    apt-get install -y software-properties-common python3-launchpadlib && \
+    apt-add-repository --yes --update ppa:ansible/ansible && \
+    apt-get install -y ansible && \
+    apt-get clean
+
+# Set working directory
+WORKDIR /ansible
+COPY . /ansible
+
+# Default command
+CMD ["ansible-playbook", "-i", "inventory.yml", "apache-certs.yml"]

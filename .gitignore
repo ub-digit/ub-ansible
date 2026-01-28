@@ -6,3 +6,4 @@ ezproxy_ssl/*
 graylog_ssl/private/*
 !graylog_ssl/private/.gitkeep
 .vault_password
+.ansible

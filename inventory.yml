@@ -28,7 +28,9 @@ docker:
     dockerhem_lab:
     dockerhem_staging:
     dockerhem_prod:
-    logg_prod:
+    dockerhem_02_prod:
+    # Logg will need a different setup due to it not being reachable from the deploying server
+    # logg_prod:
     fra_prod:
   vars:
     ansible_user: apps
@@ -40,6 +42,7 @@ apache:
     koha_lab:
     koha_staging:
     koha_prod:
+    opendata_lab:
   vars:
     ansible_user: apps
 ezproxy:

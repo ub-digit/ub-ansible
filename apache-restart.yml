@@ -1,0 +1,28 @@
+---
+- hosts: docker
+  become: true
+
+  tasks:
+  - name: Copy apache scripts
+    ansible.builtin.copy:
+      src: '{{ item }}'
+      dest: '/usr/local/bin/'
+      mode: '755'
+    loop:
+      - './remote_scripts/restart-gub-apache.sh'
+      - './remote_scripts/reload-gub-apache.sh'
+      - './remote_scripts/test-gub-apache.sh'
+
+  - name: restart apache
+    ansible.builtin.shell:
+      cmd: 'restart-gub-apache.sh'
+
+- hosts: apache
+  become: true
+
+  tasks:
+  - name: restart apache
+    ansible.builtin.systemd_service:
+      name: apache2
+      state: restarted
+...
