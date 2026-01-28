@@ -3,26 +3,24 @@
   any_errors_fatal: true # Will abort if any task fails
   become: true
 
-  tasks:
-  - name: Set ezproxy paths
-    ansible.builtin.set_fact:
-      ezproxy_ssl_path: '/data/ezproxy/ssl'
-      local_ssl_path: "{{ [playbook_dir, 'ezproxy_ssl'] | path_join }}"
-      local_file_name: ezproxy
-      suffixes:
-        - '.crt'
-        - '.ca'
-        - '.key'
+  vars:
+    ezproxy_ssl_path: '/data/ezproxy/ssl'
+    local_ssl_path: "{{ [playbook_dir, 'ezproxy_ssl'] | path_join }}"
+    local_cert_file_name: cert.pem
+    local_chain_file_name: fullchain.pem
+    local_key_file_name: privkey.pem
 
+  tasks:
   - name: Check if local certificate files exist
     delegate_to: localhost
     run_once: true
     ansible.builtin.stat:
-      path: "{{ item }}"
-
+      path: "{{ [local_ssl_path, item] | path_join }}"
     register: local_files
-    # Hack to prepend suffixes, need item to contain full path in fail msg
-    loop: "{{ suffixes | map('regex_replace', '^', ([local_ssl_path, local_file_name] | path_join)) | list }}"
+    loop:
+      - '{{ local_cert_file_name }}'
+      - '{{ local_chain_file_name }}'
+      - '{{ local_key_file_name }}'
 
   - name: Debug
     debug:
@@ -34,23 +32,22 @@
 
   - name: Abort if any local certificat file does not exist
     fail:
-      msg: "Missing certificate files: {{ missing_local_files | map(attribute='item') | list }}"
+      msg: "Missing certificate files in {{ local_ssl_path}}: {{ missing_local_files | map(attribute='item') | list }}"
     when: missing_local_files | length > 0
 
-  - name: Get current certificates
-    ansible.builtin.find:
-      paths: "{{ ezproxy_ssl_path }}"
-      patterns: '*.crt'
-      file_type: file
-    register: certificate_files
+
+  - name: Read current certificate number
+    ansible.builtin.slurp:
+      src: "{{ [ezproxy_ssl_path, 'active'] | path_join }}"
+    register: current_certificate_number_file
 
   - name: Current certificate number
     ansible.builtin.set_fact:
-      current_certificate_number: "{{ certificate_files.files | map(attribute='path') | sort | last | regex_replace('.*\\/0*', '') | regex_replace('\\.crt', '') | int }}"
+      current_certificate_number: '{{ current_certificate_number_file.content | b64decode | trim | int }}'
 
-  - name: Set next certificate file name
+  - name: Set current certificate file name
     ansible.builtin.set_fact:
-      current_file_name: "{{ '%08d' % current_certificate_number }}"
+      current_file_name: "{{ '%08d' % (current_certificate_number | int) }}"
 
   - name: Get checksum of current certificate
     ansible.builtin.stat:
@@ -60,33 +57,42 @@
 
   - name: Get checksum of local certificate
     ansible.builtin.stat:
-      path: "{{ [local_ssl_path, 'ezproxy.crt'] | path_join }}"
+      path: "{{ [local_ssl_path, local_cert_file_name] | path_join }}"
       checksum_algorithm: sha256
+      follow: true
     delegate_to: localhost
     run_once: true
     register: new_cert
 
   - block:
+    - name: Set new certificate number
+      ansible.builtin.set_fact:
+        new_certificate_number: '{{ (current_certificate_number | int) + 1 }}'
+
+    - name: Set new certificate file name
+      ansible.builtin.set_fact:
+        new_file_name: "{{ '%08d' % (new_certificate_number | int) }}"
+
     - name: Copy certificate ca and crt files
       ansible.builtin.copy:
-        src: "{{ [local_ssl_path, local_file_name ~ item.suffix] | path_join }}"
-        dest: "{{ [ezproxy_ssl_path, current_file_name ~ item.suffix] | path_join }}"
+        src: "{{ [local_ssl_path, item.filename] | path_join }}"
+        dest: "{{ [ezproxy_ssl_path, new_file_name ~ item.suffix] | path_join }}"
         mode: "{{ item.mode }}"
         owner: 'root'
       loop:
-          - { suffix: '.crt', mode: '0644'}
-          - { suffix: '.ca', mode: '0644'}
-          - { suffix: '.key', mode: '0600'}
+        - { filename: '{{ local_cert_file_name }}', suffix: '.crt', mode: '0644'}
+        - { filename: '{{ local_chain_file_name }}', suffix: '.ca', mode: '0644'}
+        - { filename: '{{ local_key_file_name }}', suffix: '.key', mode: '0600'}
 
     - name: Write active certificate
       ansible.builtin.copy:
-        dest: "{{ [ ezproxy_ssl_path, 'active' ] | path_join }}"
+        dest: "{{ [ezproxy_ssl_path, 'active'] | path_join }}"
         group: root
         owner: root
         mode: '644'
-        content: "{{ current_certificate_number }}"
+        content: "{{ new_certificate_number }}"
 
     - name: Restart ezproxy
       ansible.builtin.shell:
         cmd: 'restart-ezproxy.sh'
-    when: new_cert.stat.checksum == current_cert.stat.checksum
+    when: new_cert.stat.checksum != current_cert.stat.checksum

@@ -11,5 +11,8 @@ RUN apt-get update && \
 WORKDIR /ansible
 COPY . /ansible
 
-# Default command
-CMD ["ansible-playbook", "-i", "inventory.yml", "apache-certs.yml"]
+COPY ./docker/docker-entrypoint.sh /usr/local/bin/
+
+# Set entrypoint and default command
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["--help"}
