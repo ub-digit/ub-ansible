@@ -1,0 +1,5 @@
+---
+- src: https://github.com/ub-digit/ub-ansible-letsencrypt.git
+  version: master
+- src: https://github.com/ub-digit/ub-ansible-deploy.git
+  version: master
