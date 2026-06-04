@@ -224,9 +224,9 @@ setup.kibana:
 output.logstash:
   hosts: ["graylog-filebeat.ub.gu.se:5044"]
   ssl:
-    key: "/etc/ssl/graylog/graylog.key"
-    certificate: "/etc/ssl/graylog/graylog.crt"
-    certificate_authorities: ["/etc/ssl/graylog/graylog.crt"]
+    key: "/data/graylog/certs/graylog.key"
+    certificate: "/data/graylog/certs/graylog.crt"
+    certificate_authorities: ["/data/graylog/certs/graylog.crt"]
     verification_mode: full # "certificate" if hostname mismatch is OK, otherwise set to "full"
 
   # Optional SSL. By default is off.

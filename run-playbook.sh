@@ -32,7 +32,7 @@ if [[ -n $2 && $2 != -* ]]; then
     shift;
 fi
 
-vault_playbooks="graylog"
+vault_playbooks=""
 vault_arguments=""
 
 if [[ " $playbook " =~ " $vault_playbooks " ]]; then
