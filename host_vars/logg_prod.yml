@@ -1,1 +1,4 @@
 ansible_host: logg.ub.gu.se 
+
+le_domains:
+  - graylog.ub.gu.se

@@ -1,0 +1,48 @@
+---
+docker_git_repo_url: https://github.com/ub-digit/gub-apache.git
+docker_git_revision: main
+docker_command: docker compose
+docker_directory: './'
+
+data_dir: /opt/gub-apache2
+data_dirs:
+  webroot:
+    path: /opt/gub-apache2/webroot
+    owmer: root
+    group: root
+    mode: "0755"
+  data:
+    path: /opt/gub-apache2/data
+    owmer: root
+    group: root
+    mode: "0755"
+  conf:
+    path: /opt/gub-apache2/conf
+    owner: root
+    group: root
+    mode: "0744"
+  sites:
+    path: /opt/gub-apache2/sites
+    owmer: root
+    group: root
+    mode: "0744"
+  logs:
+    path: /opt/gub-apache2/logs
+    owmer: root
+    group: root
+    mode: "0744"
+  ssl:
+    path: /opt/gub-apache2/ssl
+    owmer: root
+    group: root
+    mode: "0744"
+  ssl_certs:
+    path: /opt/gub-apache2/ssl/certs
+    owmer: root
+    group: root
+    mode: "0644"
+  ssl_private:
+    path: /opt/gub-apache2/ssl/private
+    owmer: root
+    group: root
+    mode: "0600"

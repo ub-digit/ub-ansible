@@ -1,0 +1,6 @@
+---
+- name: Setup and manage Let's Encrypt certificates using http-01
+  hosts: letsencrypt_http
+  become: true
+  roles:
+    - ub-ansible-letsencrypt

@@ -1,0 +1,7 @@
+---
+- name: Deploy
+  hosts: gub_apache
+  tasks:
+  - name: Deploy gub-apache
+    include_role:
+      name: ub-ansible-deploy
