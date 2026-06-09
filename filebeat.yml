@@ -3,6 +3,27 @@
   become: true
 
   tasks:
+  - name: Ensure graylog ssl directory
+    ansible.builtin.file:
+      state: directory
+      path: /etc/ssl/graylog
+      mode: '0755'
+      owner: root
+
+  - name: Ensure graylog certificate
+    ansible.builtin.copy:
+      src: ./graylog_ssl/certs/graylog.crt
+      dest: /etc/ssl/graylog/graylog.crt
+      mode: '0755'
+      owner: root
+
+  - name: Ensure graylog private key
+    ansible.builtin.copy:
+      src: ./graylog_ssl/private/graylog.key
+      dest: /etc/ssl/graylog/graylog.key
+      mode: '0600'
+      owner: root
+
   - name: Ensure required dependencies are present
     ansible.builtin.apt:
       name:
