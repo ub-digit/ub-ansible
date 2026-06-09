@@ -1,0 +1,15 @@
+- type: filestream
+  id: koha
+  enabled: true
+  paths:
+    - /data/koha/koha/log/*.log
+  close_inactive: {{ filebeat_close_inactive }} #5m
+  ignore_older: {{ filebeat_ignore_older }} #24h
+  scan_frequency: {{ filebeat_scan_frequency }} #10s
+  prospector.scanner.check_interval: {{ filebeat_check_interval }} #10s
+
+  processors:
+    - add_fields:
+        fields:
+          logging_format: ECS
+        target: ""
