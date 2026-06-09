@@ -55,6 +55,7 @@ filebeat:
   children:
     ezproxy:
     docker:
+    koha:
     #TODO: Add gup_apache? Same as docker right now but could change even though unlikely. Ansible will ignore duplicate hosts
   vars:
     ansible_user: apps
@@ -72,3 +73,6 @@ letsencrypt_http:
     logg_prod:
   vars:
     ansible_user: apps
+koha:
+  hosts:
+    koha_dev:
