@@ -20,27 +20,32 @@ data_dirs:
     path: /opt/gub-apache2/conf
     owner: root
     group: root
-    mode: "0744"
+    mode: "0755"
+  conf_shared:
+    path: /opt/gub-apache2/conf
+    owner: root
+    group: root
+    mode: "0755"
   sites:
     path: /opt/gub-apache2/sites
     owmer: root
     group: root
-    mode: "0744"
+    mode: "0755"
   logs:
     path: /opt/gub-apache2/logs
     owmer: root
     group: root
-    mode: "0744"
+    mode: "0755"
   ssl:
     path: /opt/gub-apache2/ssl
     owmer: root
     group: root
-    mode: "0744"
+    mode: "0755"
   ssl_certs:
     path: /opt/gub-apache2/ssl/certs
     owmer: root
     group: root
-    mode: "0644"
+    mode: "0655"
   ssl_private:
     path: /opt/gub-apache2/ssl/private
     owmer: root
